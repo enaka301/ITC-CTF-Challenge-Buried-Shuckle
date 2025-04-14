@@ -34,6 +34,8 @@
             </div>
     </div>
 
+    <div id="timer">00:00:00</div>
+
     <script>
     function showMessage() {
         const msg = document.getElementById('msg');
@@ -63,7 +65,26 @@
       }, 2000);
     }
     </script>
+    <script>
+        function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+        }
 
+        const startTime = parseInt(localStorage.getItem('persistent_timer_start_time'), 10);
+
+        function updateTimer() {
+            const now = Date.now();
+            const elapsed = now - startTime;
+            document.getElementById('timer').textContent = formatTime(elapsed);
+        }
+
+        setInterval(updateTimer, 1000);
+        updateTimer();
+    </script>
     <script>
     let pressedFirst = false;
     let pressedSecond = false;

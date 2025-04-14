@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="eng"> <!--add japanese or other language function-->
+<html lang="eng">
 <head>
     <link rel="stylesheet" href="style.css">
     <meta charset="UTF-8"> <!--ensuring backward compatibility with ASCII-->
@@ -63,62 +63,41 @@
 </body>
 <footer>
     <div id="timer">00:00:00</div>
-    <script>
-        function showMessage() {
-            const msg = document.getElementById('msg');
-            msg.style.display = 'block';
-            setTimeout(() => { msg.style.display = 'none'; }, 3000);
-        }
+  <script>
+        const STORAGE_KEY = 'persistent_timer_start_time';
+    const LAST_ACTIVE_KEY = 'last_active_time';
+    const RESET_THRESHOLD = 10000; // 10 seconds
 
-        function showMessage2() {
-            const msg3 = document.getElementById('msge');
-            msg3.style.display = 'block';
-            setTimeout(() => { msg3.style.display = 'none'; }, 3000);
-        }
+    const now = Date.now();
+    const lastActive = parseInt(localStorage.getItem(LAST_ACTIVE_KEY) || '0', 10);
 
-        function formatTime(ms) {
-            const totalSeconds = Math.floor(ms / 1000);
-            const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-            const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-            const seconds = String(totalSeconds % 60).padStart(2, '0');
-            return `${hours}:${minutes}:${seconds}`;
-        }
+    // Check if user has been gone too long (e.g. closed the tab)
+    if (!localStorage.getItem(STORAGE_KEY) || (now - lastActive > RESET_THRESHOLD)) {
+        localStorage.setItem(STORAGE_KEY, now); // new start time
+    }
 
-        var timer;
-        var timerStart;
-        var timeSpentOnSite = 0;
+    const startTime = parseInt(localStorage.getItem(STORAGE_KEY), 10);
 
-        function startCounting(){
-            timerStart = Date.now();
-            timer = setInterval(function(){
-                timeSpentOnSite += 1000; // increment by 1 second (1000ms)
-                document.getElementById("timer").textContent = formatTime(timeSpentOnSite);
-            }, 1000);
-        }
+    function formatTime(ms) {
+        const totalSeconds = Math.floor(ms / 1000);
+        const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+        const seconds = String(totalSeconds % 60).padStart(2, '0');
+        return `${hours}:${minutes}:${seconds}`;
+    }
 
-        startCounting();
+    function updateTimer() {
+        const now = Date.now();
+        const elapsed = now - startTime;
+        document.getElementById("timer").textContent = formatTime(elapsed);
+    }
 
-        var stopCountingWhenWindowIsInactive = true;
-        if (stopCountingWhenWindowIsInactive) {
-            let hidden, visibilityChange;
-            if (typeof document.hidden !== "undefined") {
-                hidden = "hidden";
-                visibilityChange = "visibilitychange";
-            } else if (typeof document.msHidden !== "undefined") {
-                hidden = "msHidden";
-                visibilityChange = "msvisibilitychange";
-            }
-            let documentIsHidden = document[hidden];
-            document.addEventListener(visibilityChange, function () {
-                if (documentIsHidden != document[hidden]) {
-                    if (document[hidden]) {
-                        clearInterval(timer);
-                    } else {
-                        startCounting();
-                    }
-                    documentIsHidden = document[hidden];
-                }
-            });
-        }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    // Record last active time on unload (when user closes or reloads)
+    window.addEventListener("beforeunload", () => {
+        localStorage.setItem(LAST_ACTIVE_KEY, Date.now());
+    });
     </script>
 </footer>
